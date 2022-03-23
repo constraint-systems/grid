@@ -434,7 +434,7 @@ const zoomOutCenter = (state: State) => {
 
 const renderSelection = (state: State) => {
   const { width, height, selection, selectionMesh } = state;
-  const { camera, canvas } = state.gl;
+  const { camera } = state.gl;
   selectionMesh.scale.x = pixelToWorld(camera, state.initHeight, selection.w);
   selectionMesh.scale.y = pixelToWorld(camera, state.initHeight, selection.h);
   selectionMesh.position.x = pixelToWorld(
@@ -447,8 +447,37 @@ const renderSelection = (state: State) => {
     state.initHeight,
     -(selection.y + selection.h / 2 - height / 2)
   );
+  state.directionMesh.position.x =
+    selectionMesh.position.x + selectionMesh.scale.x / 2;
+  state.directionMesh.position.y = selectionMesh.position.y;
 
-  // state.app.readout.innerText = `${selection.x},${selection.y} ${selection.w}x${selection.h}`;
+  // @ts-ignore
+  const c = state.directionMesh.material.map.source.data;
+  const ctx = c.getContext("2d")!;
+  ctx.clearRect(0, 0, c.width, c.height);
+  if (state.nextDir === "right") {
+    ctx.drawImage(state.directionSprites[0], 0, 0);
+    state.directionMesh.position.x =
+      selectionMesh.position.x + selectionMesh.scale.x / 2;
+    state.directionMesh.position.y = selectionMesh.position.y;
+  } else if (state.nextDir === "down") {
+    ctx.drawImage(state.directionSprites[1], 0, 0);
+    state.directionMesh.position.x = selectionMesh.position.x;
+    state.directionMesh.position.y =
+      selectionMesh.position.y - selectionMesh.scale.y / 2;
+  } else if (state.nextDir === "left") {
+    ctx.drawImage(state.directionSprites[2], 0, 0);
+    state.directionMesh.position.x =
+      selectionMesh.position.x - selectionMesh.scale.x / 2;
+    state.directionMesh.position.y = selectionMesh.position.y;
+  } else if (state.nextDir === "up") {
+    ctx.drawImage(state.directionSprites[3], 0, 0);
+    state.directionMesh.position.x = selectionMesh.position.x;
+    state.directionMesh.position.y =
+      selectionMesh.position.y + selectionMesh.scale.y / 2;
+  }
+  // @ts-ignore
+  state.directionMesh.material.map.needsUpdate = true;
 };
 const setPanOrigin = (state: State, x: number, y: number) => {
   state.t.t0.copy(state.gl.camera.position);
@@ -926,6 +955,7 @@ function MachineLoader({ state }: { state: State }) {
           state.nextDir = e.direction;
           localStorage.setItem("nextDir", state.nextDir);
           renderReturnToNext(state);
+          renderSelection(state);
         },
         setNextDirection: (_: any, e: any) => {
           state.nextDir = e.key.toLowerCase().replace("arrow", "");
@@ -1240,6 +1270,7 @@ function MachineLoader({ state }: { state: State }) {
           }
           localStorage.setItem("nextDir", state.nextDir);
           renderReturnToNext(state);
+          renderSelection(state);
         },
         print: () => {
           const printCanvas = state.printCanvas;

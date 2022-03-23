@@ -72,6 +72,8 @@ export type State = {
   textSizes: number[];
   regenerateCounter: number;
   returnMesh: THREE.Mesh;
+  directionMesh: THREE.Mesh;
+  directionSprites: HTMLCanvasElement[];
   cameraPosition: { x: number; y: number; z: number };
   undoStack: number[];
   undoCanvases: HTMLCanvasElement[];
@@ -241,17 +243,93 @@ function StateLoader({ gl }: { gl: Gl }) {
         "position",
         new THREE.Float32BufferAttribute([0, 0, 0], 3)
       );
+      const canvas = document.createElement("canvas");
+      const size = 64;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d")!;
+      ctx.fillStyle = "#ffffff";
+      ctx.beginPath();
+      ctx.arc(size / 2, size / 2, size / 2 - 2, 0, Math.PI * 2, false);
+      ctx.fill();
       const material = new THREE.PointsMaterial({
+        map: new THREE.CanvasTexture(canvas),
         color: 0x00ffff,
+        transparent: true,
+        alphaTest: 0.5,
       });
       const mesh = new THREE.Points(geometry, material);
       gl.scene.add(mesh);
       mesh.renderOrder = 8;
       // mesh.material.size = pixelToWorld(gl.camera, initHeight, 16);
       mesh.material.sizeAttenuation = false;
-      mesh.material.size = 8;
+      mesh.material.size = 16 * window.devicePixelRatio;
       returnMesh = mesh;
       returnMesh.visible = false;
+    }
+
+    let directionMesh;
+    let directionSprites;
+    {
+      const geometry = new THREE.BufferGeometry();
+      geometry.setAttribute(
+        "position",
+        new THREE.Float32BufferAttribute([0, 0, 0], 3)
+      );
+
+      const size = 64;
+      const offset = 8;
+      const canvases = [...Array(4)].map((_, i) => {
+        const canvas = document.createElement("canvas");
+        canvas.width = size + offset * 2;
+        canvas.height = size + offset * 2;
+        const ctx = canvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.beginPath();
+        ctx.translate(offset, offset);
+        if (i === 0) {
+          ctx.translate(offset, 0);
+          ctx.moveTo(0, 0);
+          ctx.lineTo(size, size / 2);
+          ctx.lineTo(0, size);
+        } else if (i === 1) {
+          ctx.translate(0, offset);
+          ctx.moveTo(0, 0);
+          ctx.lineTo(size, 0);
+          ctx.lineTo(size / 2, size);
+        } else if (i === 2) {
+          ctx.translate(-offset, 0);
+          ctx.moveTo(size, 0);
+          ctx.lineTo(size, size);
+          ctx.lineTo(0, size / 2);
+        } else if (i === 3) {
+          ctx.translate(0, -offset);
+          ctx.moveTo(0, size);
+          ctx.lineTo(size, size);
+          ctx.lineTo(size / 2, 0);
+        }
+        ctx.fill();
+        return canvas;
+      });
+      directionSprites = canvases;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = size + offset * 2;
+      canvas.height = size + offset * 2;
+      const ctx = canvas.getContext("2d")!;
+      ctx.drawImage(canvases[0], 0, 0);
+      const material = new THREE.PointsMaterial({
+        map: new THREE.CanvasTexture(canvas),
+        color: 0x00ffff,
+        transparent: true,
+        alphaTest: 0.5,
+      });
+      const mesh = new THREE.Points(geometry, material);
+      gl.scene.add(mesh);
+      mesh.renderOrder = 8;
+      mesh.material.sizeAttenuation = false;
+      mesh.material.size = (16 + 4) * window.devicePixelRatio;
+      directionMesh = mesh;
     }
 
     let selectGridHelper;
@@ -409,7 +487,7 @@ function StateLoader({ gl }: { gl: Gl }) {
     const modeCheck = localStorage.getItem("mode");
     const mode = modeCheck === null ? "normal" : JSON.parse(modeCheck);
 
-    const undoNumber = 32;
+    const undoNumber = 24;
     const undoCanvases = [...Array(undoNumber)].map(() => {
       const c = document.createElement("canvas");
       c.width = 2048;
@@ -472,6 +550,8 @@ function StateLoader({ gl }: { gl: Gl }) {
           ? true
           : false,
       returnMesh: ref(returnMesh),
+      directionMesh: ref(directionMesh),
+      directionSprites: ref(directionSprites),
       initHeight: window.innerHeight,
       undoCanvases: ref(undoCanvases),
       undoStack: ref([]),

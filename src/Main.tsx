@@ -3,6 +3,18 @@ import { State } from "./State";
 import { subscribe, useSnapshot, ref } from "valtio";
 import * as THREE from "three";
 
+const isDarwin = () => {
+  return /Mac|iPod|iPhone|iPad/.test(window.navigator.platform);
+};
+
+const metaKey = (e: KeyboardEvent | React.KeyboardEvent) => {
+  return isDarwin() ? e.metaKey : e.ctrlKey;
+};
+
+const meta = (string: string) => {
+  return isDarwin() ? string.replace("ctrl", "cmd") : string;
+};
+
 function ButtonImg({
   src,
   style,
@@ -233,73 +245,69 @@ function Main({ m, state }: { m: any; state: State }) {
     };
     const keyDown = (e: KeyboardEvent) => {
       if (e.key.includes("Arrow")) {
-        if (e.ctrlKey && e.shiftKey) {
+        if (metaKey(e) && e.shiftKey) {
           m.send("arrowCtrlShiftKeyDown", { key: e.key });
-        } else if (e.ctrlKey) {
+        } else if (metaKey(e)) {
           m.send("arrowCtrlKeyDown", { key: e.key });
         } else if (e.shiftKey) {
           m.send("arrowShiftKeyDown", { key: e.key });
         } else {
           m.send("arrowKeyDown", { key: e.key });
         }
+        e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "o") {
+      if (metaKey(e) && e.key === "o") {
         m.send("ctrlO");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "m") {
+      if (metaKey(e) && e.key === "m") {
         m.send("ctrlM");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "g") {
+      if (metaKey(e) && e.key === "g") {
         m.send("ctrlG");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "p") {
+      if (metaKey(e) && e.key === "p") {
         m.send("ctrlP");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "f") {
+      if (metaKey(e) && e.key === "f") {
         m.send("ctrlF");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "z") {
+      if (metaKey(e) && e.shiftKey && e.key.toLowerCase() === "z") {
         m.send("ctrlShiftZ");
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "z") {
+      if (metaKey(e) && e.key === "z") {
         m.send("ctrlZ");
         e.preventDefault();
       }
-      if (e.ctrlKey && ["h", "j", "k", "l"].includes(e.key)) {
-        if (e.key === "h") {
-          m.send("ctrlH", { direction: "left" });
-        } else if (e.key === "j") {
-          m.send("ctrlJ", { direction: "down" });
-        } else if (e.key === "k") {
-          m.send("ctrlK", { direction: "up" });
-        } else if (e.key === "l") {
-          m.send("ctrlL", { direction: "right" });
-        }
+      if (e.key === "Tab") {
+        m.send("directionClick", {
+          direction: nextDirObj[state.nextDir],
+        });
         e.preventDefault();
       }
-      if (e.ctrlKey && ["1", "2", "3", "4"].includes(e.key)) {
+      if (metaKey(e) && ["1", "2", "3", "4"].includes(e.key)) {
         m.send("ctrl" + e.key, { mode: state.modes[parseInt(e.key) - 1] });
         e.preventDefault();
       }
-      if (e.ctrlKey && ["+", "="].includes(e.key)) {
+      if (metaKey(e) && ["+", "="].includes(e.key)) {
         m.send("ctrlPlus", { key: e.key });
         e.preventDefault();
       }
-      if (e.ctrlKey && e.key === "-") {
+      if (metaKey(e) && e.key === "-") {
         m.send("ctrlMinus", { key: e.key });
         e.preventDefault();
       }
-      if (!e.ctrlKey && state.textSources[0].chars.includes(e.key)) {
+      if (!metaKey(e) && state.textSources[0].chars.includes(e.key)) {
         m.send("charKeyDown", { key: e.key });
       }
       if (e.key === "Escape" || e.key === "Enter") {
         m.send("escape", { mode: "normal" });
+        e.preventDefault();
       }
       if (e.key === " ") {
         e.preventDefault();
@@ -567,7 +575,7 @@ function Main({ m, state }: { m: any; state: State }) {
             "Move camera (ctrl+2)",
             "Resize selection (ctrl+3)",
             "Set print size (ctrl+4)",
-          ];
+          ].map((v) => meta(v));
           return (
             <div key={titles[i]} title={titles[i]}>
               <ButtonImg
@@ -667,7 +675,7 @@ function Main({ m, state }: { m: any; state: State }) {
             onClick={() => {
               m.send("gridButtonClick");
             }}
-            title="Toggle grid visibility (ctrl+g)"
+            title={meta("Toggle grid visibility (ctrl+g)")}
             style={{ marginRight: 8 }}
           >
             {snap.showGrid ? (
@@ -680,7 +688,7 @@ function Main({ m, state }: { m: any; state: State }) {
             onClick={() => {
               m.send("toggleAutospaceClick");
             }}
-            title="Auto move next (ctrl+m)"
+            title={meta("Auto move next (ctrl+m)")}
           >
             {snap.moveNext ? (
               <ButtonImg src="/autoon.png" />
@@ -690,7 +698,7 @@ function Main({ m, state }: { m: any; state: State }) {
           </div>
 
           <div
-            title="Move next direction (ctrl+hjkl)"
+            title={meta("Move next direction (tab)")}
             onClick={() => {
               m.send("directionClick", {
                 direction: nextDirObj[snap.nextDir],
@@ -715,12 +723,12 @@ function Main({ m, state }: { m: any; state: State }) {
               src={"/info.png"}
               onClick={() => {
                 state.showInfo = true;
-                localStorage.setItem("shoInfo", "true");
+                localStorage.setItem("showInfo", "true");
               }}
               style={{ marginBottom: 16 }}
             />
           </div>
-          <div title="Undo (ctrl + z)">
+          <div title={meta("Undo (ctrl + z)")}>
             <ButtonImg
               className={snap.activeUndo < 1 ? "disabled" : ""}
               src={"/undo.png"}
@@ -730,7 +738,7 @@ function Main({ m, state }: { m: any; state: State }) {
               style={{ marginBottom: 8 }}
             />
           </div>
-          <div title="Redo (ctrl + shift + z)">
+          <div title={meta("Redo (ctrl + shift + z)")}>
             <ButtonImg
               className={
                 snap.activeUndo === snap.undoStack.length - 1 ? "disabled" : ""
@@ -763,7 +771,7 @@ function Main({ m, state }: { m: any; state: State }) {
             gap: 8,
           }}
         >
-          <div title="Add image (ctrl+o)">
+          <div title={meta("Add image (ctrl+o)")}>
             <ButtonImg
               src="/addimage.png"
               onClick={() => {
@@ -771,7 +779,7 @@ function Main({ m, state }: { m: any; state: State }) {
               }}
             />
           </div>
-          <div title="Image fill style (ctrl+f)">
+          <div title={meta("Image fill style (ctrl+f)")}>
             <ButtonImg
               style={{
                 marginRight: 8,
@@ -782,7 +790,7 @@ function Main({ m, state }: { m: any; state: State }) {
               }}
             />
           </div>
-          <div title="Save as image (ctrl+p)">
+          <div title={meta("Save as image (ctrl+p)")}>
             <ButtonImg
               style={{ marginRight: 8 }}
               src="/print.png"
