@@ -411,7 +411,7 @@ function StateLoader({ gl }: { gl: Gl }) {
 
       const toMeasure = ctx.measureText("M");
       const cw = toMeasure.width;
-      const perRow = Math.floor(2040 / halfContainer);
+      const perRow = Math.floor(2048 / halfContainer);
 
       textSource.size = size;
       textSource.chars = chars;
@@ -432,7 +432,6 @@ function StateLoader({ gl }: { gl: Gl }) {
           chunk++;
           if (chunk > 1) {
             offset = y;
-            console.log(offset);
           }
         }
         // @ts-ignore
@@ -444,7 +443,7 @@ function StateLoader({ gl }: { gl: Gl }) {
           // @ts-ignore
           y - offset,
         ]);
-        lookup.push([x, y, chunk - 1]);
+        lookup.push([x, y - offset, chunk - 1]);
       }
 
       const canvases = chunked.map((chunk) => {

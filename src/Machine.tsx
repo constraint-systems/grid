@@ -885,17 +885,9 @@ function MachineLoader({ state }: { state: State }) {
           const char = e.key;
           const textSource = state.textSources[sizeIndex];
           const index = textSource.chars.indexOf(char);
-          console.log(textSource.lookup[index]);
           const sx = textSource.lookup[index][0];
           const sy = textSource.lookup[index][1];
           const ctx = state.main.getContext("2d", { alpha: false })!;
-          // ctx.fillStyle = "pink";
-          // ctx.fillRect(
-          //   state.selection.x,
-          //   state.selection.y,
-          //   state.selection.w,
-          //   state.selection.h
-          // );
           ctx.drawImage(
             textSource.canvases[textSource.lookup[index][2]],
             sx,
