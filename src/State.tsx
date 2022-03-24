@@ -389,6 +389,7 @@ function StateLoader({ gl }: { gl: Gl }) {
       localStorage.getItem("foregroundColor") || "#000000";
     const transparentBackground = false;
 
+    const tempMeasureCanvas = document.createElement("canvas");
     // const textSizes = [16, 32, 64, 128, 256, 512];
     const textSizes = [16, 32, 64, 128, 256, 512];
     const textSources = [];
@@ -399,9 +400,8 @@ function StateLoader({ gl }: { gl: Gl }) {
         " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%$€¥£¢&*@#|áâàäåãæçéêèëíîìï:;-–—•,.…'\"`„‹›«»/\\?!¿¡()[]{}©®§+×=_°~^<>".split(
           ""
         );
-      const textCanvas = document.createElement("canvas");
 
-      const ctx = textCanvas.getContext("2d", { alpha: false })!;
+      const ctx = tempMeasureCanvas.getContext("2d", { alpha: false })!;
 
       const multiplier = size / 16;
       const fs = 13.333 * multiplier;
@@ -411,10 +411,7 @@ function StateLoader({ gl }: { gl: Gl }) {
 
       const toMeasure = ctx.measureText("M");
       const cw = toMeasure.width;
-      ctx.canvas.width = 2048;
-      const rows = Math.ceil((chars.length * halfContainer) / ctx.canvas.width);
-      ctx.canvas.height = rows * container;
-      const perRow = Math.floor(ctx.canvas.width / halfContainer);
+      const perRow = Math.floor(2048 / halfContainer);
 
       textSource.size = size;
       textSource.chars = chars;
@@ -450,7 +447,7 @@ function StateLoader({ gl }: { gl: Gl }) {
         lookup.push([x, y, chunk - 1]);
       }
 
-      const canvases = chunked.map((chunk, i) => {
+      const canvases = chunked.map((chunk) => {
         const lastRow = chunk[chunk.length - 1][2] + container;
         const canvas = document.createElement("canvas");
         canvas.width = 2048;
@@ -583,9 +580,6 @@ function StateLoader({ gl }: { gl: Gl }) {
       backgroundSettingCanvas: ref(document.createElement("canvas")),
       imageFill: localStorage.getItem("imageFill") || "cover",
       textSizes: ref(textSizes),
-      textCanvases: ref(
-        [...Array(textSizes.length)].map(() => document.createElement("canvas"))
-      ),
       regenerateCounter: 0,
       cameraPosition: cameraPosition,
       showInfo:
