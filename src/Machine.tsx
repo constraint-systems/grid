@@ -824,6 +824,7 @@ function MachineLoader({ state }: { state: State }) {
   const [mounted, setMounted] = useState(false);
   const mRef = useRef<any>();
   const debounced = debounce(regenerateTextSource, 200);
+  const imgRef = useRef<string | null>();
 
   useEffect(() => {
     const machine = createMachine(machineSpec, {
@@ -979,6 +980,7 @@ function MachineLoader({ state }: { state: State }) {
           renderReturnToNext(state);
         },
         openImageDialog: (_: any) => {
+          state.fileInput.value = "";
           state.fileInput.dispatchEvent(
             new PointerEvent("click", {
               bubbles: true,
@@ -1388,8 +1390,7 @@ function MachineLoader({ state }: { state: State }) {
     const interval = setInterval(() => {
       const imageURL = state.main.toDataURL("image/jpeg");
       var content_without_mime = imageURL.split(",")[1];
-      // var size_in_bytes = window.atob(content_without_mime).length;
-      // console.log(formatBytes(size_in_bytes));
+      var size_in_bytes = window.atob(content_without_mime).length;
       localStorage.setItem("main", imageURL);
     }, 3000);
 
