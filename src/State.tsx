@@ -449,7 +449,7 @@ function StateLoader({ gl }: { gl: Gl }) {
       const canvases = chunked.map((chunk) => {
         const lastRow = chunk[chunk.length - 1][2] + container;
         const canvas = document.createElement("canvas");
-        canvas.width = 2048;
+        canvas.width = 2040;
         canvas.height = lastRow;
         return canvas;
       });
@@ -467,6 +467,7 @@ function StateLoader({ gl }: { gl: Gl }) {
           const [char, x, y] = chunk[i];
           ctx.fillText(char, x, y + halfContainer);
         }
+        document.body.appendChild(c);
       }
 
       textSource.lookup = lookup;
