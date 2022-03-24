@@ -467,7 +467,6 @@ function StateLoader({ gl }: { gl: Gl }) {
           const [char, x, y] = chunk[i];
           ctx.fillText(char, x, y + halfContainer);
         }
-        document.body.appendChild(c);
       }
 
       textSource.lookup = lookup;
