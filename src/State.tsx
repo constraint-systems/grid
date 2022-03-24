@@ -411,7 +411,7 @@ function StateLoader({ gl }: { gl: Gl }) {
 
       const toMeasure = ctx.measureText("M");
       const cw = toMeasure.width;
-      const perRow = Math.floor(2048 / halfContainer);
+      const perRow = Math.floor(2040 / halfContainer);
 
       textSource.size = size;
       textSource.chars = chars;
