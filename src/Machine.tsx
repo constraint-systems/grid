@@ -7,6 +7,7 @@ import GridHelper from "./GridHelper";
 import { ref, subscribe } from "valtio";
 import { debounce, last } from "lodash";
 import { subscribeKey } from "valtio/utils";
+import { text } from "stream/consumers";
 
 const modeSetting = {
   setMode_normal: {
@@ -690,58 +691,27 @@ const toggleGridVisibility = (state: State) => {
   state.selectGridHelper.visible = !state.selectGridHelper.visible;
 };
 const regenerateTextSource = (state: State) => {
-  const textSources = [];
-  for (const size of state.textSizes) {
-    const textSource = {} as any;
-    const chars =
-      " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%$€¥£¢&*@#|áâàäåãæçéêèëíîìï:;-–—•,.…'\"`„‹›«»/\\?!¿¡()[]{}©®§+×=_°~^<>".split(
-        ""
-      );
-    const textCanvas = document.createElement("canvas");
-
-    const ctx = textCanvas.getContext("2d", { alpha: false })!;
-
-    const multiplier = size / 16;
+  for (const textSource of state.textSources) {
+    const canvases = textSource.canvases;
+    const chunked = textSource.chunked;
+    const multiplier = textSource.size / 16;
     const fs = 13.333 * multiplier;
-    ctx.font = fs + "px custom";
-    const container = 16 * multiplier;
-    const halfContainer = container / 2;
-
-    const toMeasure = ctx.measureText("M");
-    const cw = toMeasure.width;
-    ctx.canvas.width = 2048;
-    const rows = Math.ceil((chars.length * halfContainer) / ctx.canvas.width);
-    ctx.canvas.height = rows * container;
-    const perRow = Math.floor(ctx.canvas.width / cw);
-
-    textSource.chars = chars;
-    textSource.textCols = perRow;
-    textSource.charWidth = halfContainer;
-    textSource.charHeight = container;
-    textSource.canvas = textCanvas;
-
-    const c = ctx.canvas;
-
-    ctx.font = fs + "px custom";
-
-    ctx.fillStyle = state.backgroundColor;
-    ctx.fillRect(0, 0, c.width, c.height);
-
-    ctx.fillStyle = state.foregroundColor;
-    ctx.textBaseline = "middle";
-    for (let i = 0; i < chars.length; i++) {
-      const char = chars[i];
-      const col = i % perRow;
-      const row = Math.floor(i / perRow);
-      ctx.fillText(
-        char,
-        col * halfContainer + halfContainer / 2 - cw / 2,
-        row * container + container / 2
-      );
+    for (let i = 0; i < chunked.length; i++) {
+      const chunk = chunked[i];
+      const c = canvases[i];
+      const ctx = c.getContext("2d", { alpha: false })!;
+      ctx.fillStyle = state.backgroundColor;
+      ctx.fillRect(0, 0, c.width, c.height);
+      ctx.font = fs + "px custom";
+      ctx.fillStyle = state.foregroundColor;
+      ctx.textBaseline = "middle";
+      for (let i = 0; i < chunk.length; i++) {
+        // @ts-ignore
+        const [char, x, y] = chunk[i];
+        ctx.fillText(char, x, y + textSource.charWidth);
+      }
     }
-    textSources.push(textSource);
   }
-  state.textSources = ref(textSources);
   state.regenerateCounter = state.regenerateCounter + 1;
 };
 const renderReturnToNext = (state: State) => {
@@ -824,7 +794,6 @@ function MachineLoader({ state }: { state: State }) {
   const [mounted, setMounted] = useState(false);
   const mRef = useRef<any>();
   const debounced = debounce(regenerateTextSource, 200);
-  const imgRef = useRef<string | null>();
 
   useEffect(() => {
     const machine = createMachine(machineSpec, {
@@ -839,7 +808,6 @@ function MachineLoader({ state }: { state: State }) {
         setMouseSelected: () => {
           const { x, y } = state.mousePosition;
           setRay(state, x, y);
-          const canvasRay = worldToCanvasPixel(state, state.ray);
           if (state.keyboardRef && state.keyboardRef.current) {
             state.keyboardRef.current.focus();
           }
@@ -917,13 +885,19 @@ function MachineLoader({ state }: { state: State }) {
           const char = e.key;
           const textSource = state.textSources[sizeIndex];
           const index = textSource.chars.indexOf(char);
-          const c = index % textSource.textCols;
-          const r = Math.floor(index / textSource.textCols);
-          const sx = c * textSource.charWidth;
-          const sy = r * textSource.charHeight;
+          console.log(textSource.lookup[index]);
+          const sx = textSource.lookup[index][0];
+          const sy = textSource.lookup[index][1];
           const ctx = state.main.getContext("2d", { alpha: false })!;
+          // ctx.fillStyle = "pink";
+          // ctx.fillRect(
+          //   state.selection.x,
+          //   state.selection.y,
+          //   state.selection.w,
+          //   state.selection.h
+          // );
           ctx.drawImage(
-            textSource.canvas,
+            textSource.canvases[textSource.lookup[index][2]],
             sx,
             sy,
             textSource.charWidth,

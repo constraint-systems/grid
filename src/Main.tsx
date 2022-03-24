@@ -478,17 +478,16 @@ function Main({ m, state }: { m: any; state: State }) {
       ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
       let count = 0;
       const textSource = state.textSources[1];
-      if (textSource.canvas) {
+      if (textSource.canvases) {
         for (let char of "BACKGRND".split("")) {
           const col = count % 4;
           const row = Math.floor(count / 4);
           const index = textSource.chars.indexOf(char);
-          const c = index % textSource.textCols;
-          const r = Math.floor(index / textSource.textCols);
-          const sx = c * textSource.charWidth;
-          const sy = r * textSource.charHeight;
+          const sx = textSource.lookup[index][0];
+          const sy = textSource.lookup[index][1];
+          const canvasIndex = textSource.lookup[index][2];
           ctx.drawImage(
-            textSource.canvas,
+            textSource.canvases[canvasIndex],
             sx,
             sy,
             textSource.charWidth,
@@ -519,24 +518,23 @@ function Main({ m, state }: { m: any; state: State }) {
       ctx.fillStyle = snap.foregroundColor;
       let count = 0;
       const textSource = state.textSources[1];
-      if (textSource.canvas) {
+      if (textSource.canvases) {
         for (let char of "TEXT".split("")) {
-          const col = count % 2;
-          const row = Math.floor(count / 2);
+          const col = count % 4;
+          const row = Math.floor(count / 4);
           const index = textSource.chars.indexOf(char);
-          const c = index % textSource.textCols;
-          const r = Math.floor(index / textSource.textCols);
-          const sx = c * textSource.charWidth;
-          const sy = r * textSource.charHeight;
+          const sx = textSource.lookup[index][0];
+          const sy = textSource.lookup[index][1];
+          const canvasIndex = textSource.lookup[index][2];
           ctx.drawImage(
-            textSource.canvas,
+            textSource.canvases[canvasIndex],
             sx,
             sy,
             textSource.charWidth,
             textSource.charHeight,
-            (col * 16 + 4) * window.devicePixelRatio,
+            (col * 8 + 4) * window.devicePixelRatio,
             (row * 16 + 4) * window.devicePixelRatio,
-            16 * window.devicePixelRatio,
+            8 * window.devicePixelRatio,
             16 * window.devicePixelRatio
           );
           count++;

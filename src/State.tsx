@@ -11,11 +11,14 @@ const modes = ["normal", "pan", "resize", "page"] as const;
 type modeType = typeof modes[number];
 
 type textSource = {
+  size: number;
   chars: string[];
-  canvas: HTMLCanvasElement;
+  canvases: HTMLCanvasElement[];
   textCols: number;
   charWidth: number;
   charHeight: number;
+  chunked: [string, number, number][];
+  lookup: number[][];
 };
 
 export type State = {
@@ -386,9 +389,11 @@ function StateLoader({ gl }: { gl: Gl }) {
       localStorage.getItem("foregroundColor") || "#000000";
     const transparentBackground = false;
 
-    const textSizes = [16, 32, 64, 128, 256, 512, 1024];
+    // const textSizes = [16, 32, 64, 128, 256, 512];
+    const textSizes = [16, 32, 64, 128, 256, 512];
     const textSources = [];
-    for (const size of textSizes) {
+    for (let i = 0; i < textSizes.length; i++) {
+      const size = textSizes[i];
       const textSource = {} as any;
       const chars =
         " abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789%$€¥£¢&*@#|áâàäåãæçéêèëíîìï:;-–—•,.…'\"`„‹›«»/\\?!¿¡()[]{}©®§+×=_°~^<>".split(
@@ -409,33 +414,69 @@ function StateLoader({ gl }: { gl: Gl }) {
       ctx.canvas.width = 2048;
       const rows = Math.ceil((chars.length * halfContainer) / ctx.canvas.width);
       ctx.canvas.height = rows * container;
-      const perRow = Math.floor(ctx.canvas.width / cw);
+      const perRow = Math.floor(ctx.canvas.width / halfContainer);
 
+      textSource.size = size;
       textSource.chars = chars;
-      textSource.textCols = perRow;
       textSource.charWidth = halfContainer;
       textSource.charHeight = container;
-      textSource.canvas = textCanvas;
 
-      const c = ctx.canvas;
-
-      ctx.font = fs + "px custom";
-
-      ctx.fillStyle = backgroundColor;
-      ctx.fillRect(0, 0, c.width, c.height);
-
-      ctx.fillStyle = foregroundColor;
-      ctx.textBaseline = "middle";
+      let chunked = [];
+      const lookup = [];
+      let chunk = 0;
+      let offset = 0;
       for (let i = 0; i < chars.length; i++) {
-        const char = chars[i];
         const col = i % perRow;
-        const row = Math.floor(i / perRow);
-        ctx.fillText(
-          char,
-          col * halfContainer + halfContainer / 2 - cw / 2,
-          row * container + container / 2
-        );
+        let row = Math.floor(i / perRow);
+        const x = col * halfContainer + halfContainer / 2 - cw / 2;
+        let y = row * container;
+        if (y + container > chunk * 2048) {
+          chunked.push([]);
+          chunk++;
+          if (chunk > 1) {
+            offset = y;
+            console.log(offset);
+          }
+        }
+        // @ts-ignore
+        chunked[chunk - 1].push([
+          // @ts-ignore
+          chars[i],
+          // @ts-ignore
+          x,
+          // @ts-ignore
+          y - offset,
+        ]);
+        lookup.push([x, y, chunk - 1]);
       }
+
+      const canvases = chunked.map((chunk, i) => {
+        const lastRow = chunk[chunk.length - 1][2] + container;
+        const canvas = document.createElement("canvas");
+        canvas.width = 2048;
+        canvas.height = lastRow;
+        return canvas;
+      });
+
+      for (let i = 0; i < chunked.length; i++) {
+        const chunk = chunked[i];
+        const c = canvases[i];
+        const ctx = c.getContext("2d", { alpha: false })!;
+        ctx.fillStyle = backgroundColor;
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.font = fs + "px custom";
+        ctx.fillStyle = foregroundColor;
+        ctx.textBaseline = "middle";
+        for (let i = 0; i < chunk.length; i++) {
+          const [char, x, y] = chunk[i];
+          ctx.fillText(char, x, y + halfContainer);
+        }
+      }
+
+      textSource.lookup = lookup;
+      textSource.chunked = chunked;
+      textSource.canvases = canvases;
+
       textSources.push(textSource);
     }
 
@@ -487,7 +528,7 @@ function StateLoader({ gl }: { gl: Gl }) {
     const modeCheck = localStorage.getItem("mode");
     const mode = modeCheck === null ? "normal" : JSON.parse(modeCheck);
 
-    const undoNumber = 24;
+    const undoNumber = 17;
     const undoCanvases = [...Array(undoNumber)].map(() => {
       const c = document.createElement("canvas");
       c.width = 2048;
@@ -542,6 +583,9 @@ function StateLoader({ gl }: { gl: Gl }) {
       backgroundSettingCanvas: ref(document.createElement("canvas")),
       imageFill: localStorage.getItem("imageFill") || "cover",
       textSizes: ref(textSizes),
+      textCanvases: ref(
+        [...Array(textSizes.length)].map(() => document.createElement("canvas"))
+      ),
       regenerateCounter: 0,
       cameraPosition: cameraPosition,
       showInfo:
