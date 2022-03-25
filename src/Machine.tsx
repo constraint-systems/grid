@@ -888,7 +888,6 @@ function MachineLoader({ state }: { state: State }) {
           const sx = textSource.lookup[index][0];
           const sy = textSource.lookup[index][1];
           const ctx = state.main.getContext("2d", { alpha: false })!;
-          console.log(sx, sy, textSource.charWidth, textSource.charHeight);
           ctx.drawImage(
             textSource.canvases[textSource.lookup[index][2]],
             sx,
