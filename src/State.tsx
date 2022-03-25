@@ -443,13 +443,13 @@ function StateLoader({ gl }: { gl: Gl }) {
           // @ts-ignore
           y - offset,
         ]);
-        lookup.push([x, y - offset, chunk - 1]);
+        lookup.push([col * halfContainer, y - offset, chunk - 1]);
       }
 
       const canvases = chunked.map((chunk) => {
         const lastRow = chunk[chunk.length - 1][2] + container;
         const canvas = document.createElement("canvas");
-        canvas.width = 2040;
+        canvas.width = 2048;
         canvas.height = lastRow;
         return canvas;
       });
