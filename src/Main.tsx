@@ -244,78 +244,94 @@ function Main({ m, state }: { m: any; state: State }) {
       m.send("mouseWheel", { deltaY: e.deltaY });
     };
     const keyDown = (e: KeyboardEvent) => {
-      if (e.key.includes("Arrow")) {
+      let keyname = e.key;
+
+      // Normalize windows keys
+      if (e.key === "Left") {
+        keyname = "ArrowLeft";
+      } else if (keyname === "Right") {
+        keyname = "ArrowRight";
+      } else if (keyname === "Up") {
+        keyname = "ArrowUp";
+      } else if (keyname === "Down") {
+        keyname = "ArrowDown";
+      }
+      if (e.key === "Esc") {
+        keyname = "Escape";
+      }
+
+      if (keyname.includes("Arrow")) {
         if (metaKey(e) && e.shiftKey) {
-          m.send("arrowCtrlShiftKeyDown", { key: e.key });
+          m.send("arrowCtrlShiftKeyDown", { key: keyname });
         } else if (metaKey(e)) {
-          m.send("arrowCtrlKeyDown", { key: e.key });
+          m.send("arrowCtrlKeyDown", { key: keyname });
         } else if (e.shiftKey) {
-          m.send("arrowShiftKeyDown", { key: e.key });
+          m.send("arrowShiftKeyDown", { key: keyname });
         } else {
-          m.send("arrowKeyDown", { key: e.key });
+          m.send("arrowKeyDown", { key: keyname });
         }
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "o") {
+      if (metaKey(e) && keyname === "o") {
         m.send("ctrlO");
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "m") {
+      if (metaKey(e) && keyname === "m") {
         m.send("ctrlM");
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "g") {
+      if (metaKey(e) && keyname === "g") {
         m.send("ctrlG");
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "p") {
+      if (metaKey(e) && keyname === "p") {
         m.send("ctrlP");
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "f") {
+      if (metaKey(e) && keyname === "f") {
         m.send("ctrlF");
         e.preventDefault();
       }
-      if (metaKey(e) && e.shiftKey && e.key.toLowerCase() === "z") {
+      if (metaKey(e) && e.shiftKey && keyname.toLowerCase() === "z") {
         m.send("ctrlShiftZ");
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "z") {
+      if (metaKey(e) && keyname === "z") {
         m.send("ctrlZ");
         e.preventDefault();
       }
-      if (e.key === "Tab") {
+      if (keyname === "Tab") {
         m.send("directionClick", {
           direction: nextDirObj[state.nextDir],
         });
         e.preventDefault();
       }
-      if (metaKey(e) && ["1", "2", "3", "4"].includes(e.key)) {
-        m.send("ctrl" + e.key, { mode: state.modes[parseInt(e.key) - 1] });
+      if (metaKey(e) && ["1", "2", "3", "4"].includes(keyname)) {
+        m.send("ctrl" + keyname, { mode: state.modes[parseInt(keyname) - 1] });
         e.preventDefault();
       }
-      if (metaKey(e) && ["+", "="].includes(e.key)) {
-        m.send("ctrlPlus", { key: e.key });
+      if (metaKey(e) && ["+", "="].includes(keyname)) {
+        m.send("ctrlPlus", { key: keyname });
         e.preventDefault();
       }
-      if (metaKey(e) && e.key === "-") {
-        m.send("ctrlMinus", { key: e.key });
+      if (metaKey(e) && keyname === "-") {
+        m.send("ctrlMinus", { key: keyname });
         e.preventDefault();
       }
-      if (!metaKey(e) && state.textSources[0].chars.includes(e.key)) {
-        m.send("charKeyDown", { key: e.key });
+      if (!metaKey(e) && state.textSources[0].chars.includes(keyname)) {
+        m.send("charKeyDown", { key: keyname });
       }
-      if (e.key === "Escape" || e.key === "Enter") {
+      if (keyname === "Escape" || keyname === "Enter") {
         m.send("escape", { mode: "normal" });
         e.preventDefault();
       }
-      if (e.key === " ") {
+      if (keyname === " ") {
         e.preventDefault();
       }
-      if (e.key === "Enter" || e.key === "Enter") {
+      if (keyname === "Enter" || keyname === "Enter") {
         m.send("enter");
       }
-      if (e.key === "Backspace") {
+      if (keyname === "Backspace") {
         m.send("backspaceKeyDown");
       }
     };
