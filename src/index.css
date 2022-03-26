@@ -65,9 +65,15 @@ input {
   bottom: 0;
   pointer-events: none;
 }
+.text-hover:hover {
+  background: #ddd;
+}
 @media (hover: hover) {
   label:hover .cover {
     background-color: #cccccc !important;
     mix-blend-mode: multiply;
   }
+}
+a {
+  color: inherit;
 }

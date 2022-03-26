@@ -854,6 +854,7 @@ function Main({ m, state }: { m: any; state: State }) {
             background: "rgba(0,0,0,0.5)",
             zIndex: 99,
             padding: "24px 0",
+            overflowY: "auto",
           }}
           onClick={() => {
             state.showInfo = false;
@@ -878,8 +879,18 @@ function Main({ m, state }: { m: any; state: State }) {
                 marginBottom: 16,
               }}
             >
-              <div>Info</div>
+              <div>INFO</div>
               <div
+                className="text-hover"
+                style={{
+                  width: 32,
+                  cursor: "pointer",
+                  textAlign: "center",
+                  height: 32,
+                  lineHeight: "32px",
+                  marginTop: -8,
+                  marginBottom: -8,
+                }}
                 onClick={() => {
                   state.showInfo = false;
                   localStorage.setItem("showInfo", "false");
@@ -888,18 +899,16 @@ function Main({ m, state }: { m: any; state: State }) {
                 X
               </div>
             </div>
+            <div style={{ marginBottom: 8 }}>
+              Grid is an experimental text editor. Adjust the grid size and text
+              direction to create weird and expressive layouts.
+            </div>
             <div style={{ marginBottom: 16 }}>
-              Grid is an experimental collage editor. Adjust the grid cell size
-              and text direction to create weird and expressive layouts.
+              The best way to get started with Grid is by experimenting. Come
+              back and read the controls if you get stuck or curious.
             </div>
-            <div>
-              The best way to get started with Grid is just experimenting by
-              typing and clicking around. There are multiple ways to do most
-              actions. Come back and read through the controls when you get
-              curious or stuck.
-            </div>
-            <div style={{ marginBottom: 16 }}>CONTROLS</div>
-            <div style={{ marginBottom: 0 }}>Mouse</div>
+            <div style={{ marginBottom: 8 }}>CONTROLS</div>
+            <div style={{}}>Mouse</div>
             <div>Left click - select a cell</div>
             <div>Left click and drag - set autospace direction</div>
             <div>Middle click and drag - pan canvas</div>
@@ -914,12 +923,17 @@ function Main({ m, state }: { m: any; state: State }) {
               you click the PRINT button.
             </div>
             <div style={{ marginTop: 16 }}>Keyboard controls</div>
-            <div>Type to write letters</div>
+            <div>Type to write</div>
             <div>Arrow keys - move selection</div>
-            <div>Enter - return to text direction start</div>
-            <div>Ctrl + arrow keys - resize grid cell from the top left</div>
+            <div>Tab - change writing direction</div>
+            <div>Enter - return to recent start (cyan circle)</div>
             <div>
-              Ctrl + shift + arrow keys - resize grid cell from the bottom right
+              {meta("Ctrl + arrow keys - resize grid cell from the top left")}
+            </div>
+            <div>
+              {meta(
+                "Ctrl + shift + arrow keys - resize grid cell from the bottom right"
+              )}
             </div>
             <div>Shift + arrow key - shift cell position</div>
             <div style={{ marginTop: 16 }}>Images</div>
@@ -930,14 +944,24 @@ function Main({ m, state }: { m: any; state: State }) {
             <div style={{ marginTop: 16 }}>Saving</div>
             <div>
               Your image and settings are automatically saved in your browser's
-              local storage. To download an image, click print.
+              local storage. To download an image, click PRINT.
             </div>
-            <div style={{ marginTop: 16 }}>About</div>
+            <div style={{ marginTop: 16, marginBottom: 8 }}>ABOUT</div>
+            <div style={{ marginBottom: 8 }}>
+              The font used is{" "}
+              <a href="https://www.jetbrains.com/lp/mono/" target="_blank">
+                JetBrains Mono
+              </a>
+              , it is printed to multiple spritesheets selected based on the
+              cell-size resolution.
+            </div>
             <div>
-              Font is JetBrains Mono, it is printed to multiple spritesheets
-              selected based on the cell-size resolution.
+              A{" "}
+              <a href="https://constraint.systems" target="_blank">
+                Constraint Systems
+              </a>{" "}
+              project.
             </div>
-            <div>A Constraint Systems project</div>
           </div>
         </div>
       ) : null}
