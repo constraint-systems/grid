@@ -10,7 +10,7 @@ https://grid.constraint.systems
 
 ## Behind the scenes
 
-The canvas is one 2048 by 2048 HTMLL canvas element. A series of text spritesheets are created at different sizes. When you write a letter it selects the spritesheet nearest the cell size and draws that image to the canvas.
+The canvas is one 2048 by 2048 HTML canvas element. A series of text spritesheets are created at different sizes. When you write a letter it selects the spritesheet nearest the cell size and draws that image to the canvas.
 
 Three.js is used to place the canvas in a pannable, zoomable space.
 
